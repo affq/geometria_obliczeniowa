@@ -13,9 +13,9 @@ def check_position():
     vec_prod = (b[0]-a[0])*(p[1]-a[1]) - (b[1]-a[1])*(p[0]-a[0])
     if det == 0:
         label_output.config(text='Punkt P leży na prostej AB')
-    elif det > 0:
-        label_output.config(text='Punkt P leży po prawej stronie prostej AB')
     elif det < 0:
+        label_output.config(text='Punkt P leży po prawej stronie prostej AB')
+    elif det > 0:
         label_output.config(text='Punkt P leży po lewej stronie prostej AB')
 
     diff = vec_prod - det
@@ -73,10 +73,10 @@ entry_py = tk.Entry(window)
 entry_py.grid(row=2, column=4, padx=5, pady=5)
 
 button_check = tk.Button(window, text='Sprawdź położenie', command=check_position)
-button_check.grid(row=3, column=1, columnspan=2)
+button_check.grid(row=5, column=1, columnspan=2)
 
 label_output = tk.Label(window, text='')
-label_output.grid(row=4, column=1, columnspan=3)
+label_output.grid(row=6, column=1, columnspan=3)
 
 label_det = tk.Label(window, text='')
 label_det.grid(row=0, column=5, columnspan=3)
@@ -89,22 +89,3 @@ label_diff.grid(row=2, column=5, columnspan=3)
 
 window.mainloop()
 
-entry_py = tk.Entry(window)
-entry_py.grid(row=2, column=2, padx=5, pady=5)
-
-button_check = tk.Button(window, text='Sprawdź położenie', command=check_position)
-button_check.grid(row=3, column=1, columnspan=2)
-
-label_output = tk.Label(window, text='')
-label_output.grid(row=4, column=1, columnspan=3)
-
-label_det = tk.Label(window, text='')
-label_det.grid(row=0, column=3, columnspan=3)
-
-label_vec_prod = tk.Label(window, text='')
-label_vec_prod.grid(row=1, column=3, columnspan=3)
-
-label_diff = tk.Label(window, text='')
-label_diff.grid(row=2, column=3, columnspan=3)
-
-window.mainloop()
