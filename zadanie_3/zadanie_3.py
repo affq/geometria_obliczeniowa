@@ -124,12 +124,16 @@ def draw_points():
             points_inside += 1
             points_inside_loaded.append(point)
             ax.plot(point[0], point[1], color=current_point_inside, marker='o', markersize=current_point_size)
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
     number_label.configure(text=str(points_inside))
     canvas.draw()
 
 def draw_polygon():
     ax.clear()
     ax.plot([x[0] for x in polygon], [x[1] for x in polygon], color=current_color, linewidth=current_line_width, linestyle=current_line_style)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
     canvas.draw()
 
 def check_point():
@@ -155,9 +159,11 @@ def check_point():
             ax.plot(point[0], point[1], color=current_point_inside, marker='o', markersize=current_point_size)
         else:
             ax.plot(point[0], point[1], color=current_point_outside, marker='o', markersize=current_point_size)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
 
     if check_point_location(x, y):
-        ax.plot(x, y, 'go')
+        ax.plot(x, y, color=current_point_inside, marker='o', markersize=current_point_size)
         result_label.configure(text="punkt należy do wielokąta", fg="green", font=("Arial", 10, "italic"))
         if [x, y, 1] not in points_added_manually:
             points_added_manually.append([x, y, 1])
@@ -166,7 +172,7 @@ def check_point():
             messagebox.showinfo("Informacja", "Ten punkt został już dodany.")
         number_label.configure(text=str(number_of_points_added_manually))
     else:
-        ax.plot(x, y, 'ro')
+        ax.plot(x, y, color=current_point_outside, marker='o', markersize=current_point_size)
         points_added_manually.append([x, y, 0])
         result_label.configure(text="punkt nie należy do wielokąta", fg="red", font=("Arial", 10, "italic"))
 
@@ -175,7 +181,7 @@ def check_point():
 
 root = tk.Tk()
 root.title("Zadanie 3")
-root.geometry("950x700")
+root.geometry("950x750")
 
 load_polygon_button = tk.Button(root, text="Wczytaj wielokąt z pliku", width=20, height=2)
 load_polygon_button.grid(row=0, column=0, padx=5, pady=5, columnspan=4)
@@ -231,18 +237,28 @@ def redraw():
     ax.clear()
     if polygon:
         ax.plot([x[0] for x in polygon], [x[1] for x in polygon], color=current_color, linewidth=current_line_width, linestyle=current_line_style)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
     if points:
         for point in points_inside_loaded:
             if check_point_location(point[0], point[1]):
                 ax.plot(point[0], point[1], color=current_point_inside, marker='o', markersize=current_point_size)
+                ax.set_xlabel('x')
+                ax.set_ylabel('y')
             else:
                 ax.plot(point[0], point[1], color=current_point_outside, marker='o', markersize=current_point_size)
+                ax.set_xlabel('x')
+                ax.set_ylabel('y')
     if points_added_manually:
         for point in points_added_manually:
             if point[2] == 1:
                 ax.plot(point[0], point[1], color=current_point_inside, marker='o', markersize=current_point_size)
+                ax.set_xlabel('x')
+                ax.set_ylabel('y')
             else:
                 ax.plot(point[0], point[1], color=current_point_outside, marker='o', markersize=current_point_size)
+                ax.set_xlabel('x')
+                ax.set_ylabel('y')
     canvas.draw()
 
 # zmiana koloru linii
@@ -284,5 +300,45 @@ line_style.current(0)
 line_style.set("Wybierz styl linii")
 line_style.bind("<<ComboboxSelected>>", change_line_style)
 
+# kolor punktów wewnątrz wielokąta
+def change_point_inside():
+    global current_point_inside
+    color = askcolor()
+    if color[1]:
+        current_point_inside = color[1]
+        redraw()
+
+# kolor punktów na zewnątrz wielokąta
+def change_point_outside():
+    global current_point_outside
+    color = askcolor()
+    if color[1]:
+        current_point_outside = color[1]
+        redraw()
+
+# rozmiar punktów
+def change_point_size(event):
+    global current_point_size
+    current_point_size = int(point_size.get())
+    redraw()
+
+frame3 = tk.Frame(root)
+frame3.grid(row=22, column=4, columnspan=8, padx=5, pady=5)
+
+point_inside_button = tk.Button(frame3, text="Zmień kolor punktów \n wewnątrz wielokąta", width=20, height=2)
+point_inside_button.grid(row=0, column=0, padx=20, pady=5)
+point_inside_button.configure(command=change_point_inside)
+
+point_outside_button = tk.Button(frame3, text="Zmień kolor punktów \n na zewnątrz wielokąta", width=20, height=2)
+point_outside_button.grid(row=0, column=3, padx=20, pady=5)
+point_outside_button.configure(command=change_point_outside)
+
+point_size = ttk.Combobox(frame3, width=20, values=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+point_size.grid(row=0, column=6, padx=5, pady=5)
+point_size.current(0)
+point_size.set("Wybierz rozmiar punktów")
+point_size.bind("<<ComboboxSelected>>", change_point_size)
+
+root.resizable(False, False)
 
 root.mainloop()
