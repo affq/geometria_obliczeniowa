@@ -42,6 +42,10 @@ def polygon_check(x, y):
     for i in range(len(polygon)):
         p1 = polygon[i]
         p2 = polygon[(i + 1) % len(polygon)]
+
+        if (y == p1[1] and y == p2[1]):
+            if (min(p1[0], p2[0]) <= x <= max(p1[0], p2[0])):
+                return True
         
         if (min(p1[1], p2[1]) <= y <= max(p1[1], p2[1])):
             try:
