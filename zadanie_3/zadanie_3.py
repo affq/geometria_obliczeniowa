@@ -67,6 +67,7 @@ def reset():
     points.clear()
     points_added_manually.clear()
     points_inside = 0
+    points_inside_loaded.clear()
     global number_of_points_added_manually
     number_of_points_added_manually = 0
     ax.clear()
@@ -127,17 +128,27 @@ def draw_points():
         if check_point_location(point[0], point[1]):
             points_inside += 1
             points_inside_loaded.append(point)
-            ax.plot(point[0], point[1], color=current_point_inside, marker='o', markersize=current_point_size)
-            ax.set_xlabel('x')
-            ax.set_ylabel('y')
+            ax.plot(point[1], point[0], color=current_point_inside, marker='o', markersize=current_point_size)
+            ax.set_xlabel('y')
+            ax.set_ylabel('x')
     number_label.configure(text=str(points_inside))
     canvas.draw()
 
+def set_scale():
+    global scale
+    scale = 1
+    max_polygon_point = max(x[0] for x in polygon), max(x[1] for x in polygon)
+    min_polygon_point = min(x[0] for x in polygon), min(x[1] for x in polygon)
+    return max_polygon_point, min_polygon_point
+
 def draw_polygon():
+    global max_point
+    global min_point
     ax.clear()
-    ax.plot([x[0] for x in polygon], [x[1] for x in polygon], color=current_color, linewidth=current_line_width, linestyle=current_line_style)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
+    ax.plot([x[1] for x in polygon], [x[0] for x in polygon], color=current_color, linewidth=current_line_width, linestyle=current_line_style)
+    ax.set_xlabel('y')
+    ax.set_ylabel('x')
+    ax.set_aspect('equal')
     canvas.draw()
 
 def check_point():
@@ -157,17 +168,18 @@ def check_point():
 
     points.clear()
     draw_polygon()
+    points_inside_loaded.clear()
     # draw points added manually
     for point in points_added_manually:
         if point[2] == 1:
-            ax.plot(point[0], point[1], color=current_point_inside, marker='o', markersize=current_point_size)
+            ax.plot(point[1], point[0], color=current_point_inside, marker='o', markersize=current_point_size)
         else:
-            ax.plot(point[0], point[1], color=current_point_outside, marker='o', markersize=current_point_size)
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
+            ax.plot(point[1], point[0], color=current_point_outside, marker='o', markersize=current_point_size)
+        ax.set_xlabel('y')
+        ax.set_ylabel('x')
 
     if check_point_location(x, y):
-        ax.plot(x, y, color=current_point_inside, marker='o', markersize=current_point_size)
+        ax.plot(y, x, color=current_point_inside, marker='o', markersize=current_point_size)
         result_label.configure(text="punkt należy do wielokąta", fg="green", font=("Arial", 10, "italic"))
         if [x, y, 1] not in points_added_manually:
             points_added_manually.append([x, y, 1])
@@ -176,12 +188,60 @@ def check_point():
             messagebox.showinfo("Informacja", "Ten punkt został już dodany.")
         number_label.configure(text=str(number_of_points_added_manually))
     else:
-        ax.plot(x, y, color=current_point_outside, marker='o', markersize=current_point_size)
+        ax.plot(y, x, color=current_point_outside, marker='o', markersize=current_point_size)
         points_added_manually.append([x, y, 0])
         result_label.configure(text="punkt nie należy do wielokąta", fg="red", font=("Arial", 10, "italic"))
+        number_label.configure(text=str(number_of_points_added_manually))
 
+    min_point = minpoint()
+    max_point = maxpoint()
+    #set scale
+    ax.set_xlim(min_point[1] - 10, max_point[1] + 10)
+    ax.set_ylim(min_point[0] - 10, max_point[0] + 10)
     canvas.draw()
 
+def maxpoint():
+    global max_point
+    if points_inside_loaded and points_added_manually:
+        max_x = max(max(x[0] for x in polygon), max(x[0] for x in points_inside_loaded), max(x[0] for x in points_added_manually))
+        max_y = max(max(x[1] for x in polygon), max(x[1] for x in points_inside_loaded), max(x[1] for x in points_added_manually))
+        max_point = max_x, max_y
+    elif points_inside_loaded:
+        max_x = max(max(x[0] for x in polygon), max(x[0] for x in points_inside_loaded))
+        max_y = max(max(x[1] for x in polygon), max(x[1] for x in points_inside_loaded))
+        max_point = max_x, max_y
+    elif points_added_manually:
+        max_x = max(max(x[0] for x in polygon), max(x[0] for x in points_added_manually))
+        max_y = max(max(x[1] for x in polygon), max(x[1] for x in points_added_manually))
+        max_point = max_x, max_y
+    else:
+        max_x = max(x[0] for x in polygon)
+        max_y = max(x[1] for x in polygon)
+        max_point = max_x, max_y
+    
+    return max_point
+    
+def minpoint():
+    global min_point
+    if points_inside_loaded and points_added_manually:
+        min_x = min(min(x[0] for x in polygon), min(x[0] for x in points_inside_loaded), min(x[0] for x in points_added_manually))
+        min_y = min(min(x[1] for x in polygon), min(x[1] for x in points_inside_loaded), min(x[1] for x in points_added_manually))
+        min_point = min_x, min_y
+    elif points_inside_loaded:
+        min_x = min(min(x[0] for x in polygon), min(x[0] for x in points_inside_loaded))
+        min_y = min(min(x[1] for x in polygon), min(x[1] for x in points_inside_loaded))
+        min_point = min_x, min_y
+    elif points_added_manually:
+        min_x = min(min(x[0] for x in polygon), min(x[0] for x in points_added_manually))
+        min_y = min(min(x[1] for x in polygon), min(x[1] for x in points_added_manually))
+        min_point = min_x, min_y
+    else:
+        min_x = min(x[0] for x in polygon)
+        min_y = min(x[1] for x in polygon)
+        min_point = min_x, min_y
+    
+    return min_point
+    
 
 root = tk.Tk()
 root.title("Zadanie 3")
@@ -207,17 +267,17 @@ frame.grid(row=3, column=0, padx=20, pady=20, columnspan=4)
 point_label = tk.Label(frame, text="Wpisz współrzędne punktu:", font=("Calibri", 12, "bold"))
 point_label.grid(row=0, column=0, padx=10, pady=20, columnspan=4)
 
-# x_label = tk.Label(frame, text="x:")
-# x_label.grid(row=1, column=0, padx=5, pady=5)
+x_label = tk.Label(frame, text="x:")
+x_label.grid(row=1, column=0, padx=5, pady=5)
 
 x_input = tk.Entry(frame, width=10)
 x_input.grid(row=1, column=1, padx=5, pady=5)
 
-# y_label = tk.Label(frame, text="y:")
-# y_label.grid(row=1, column=2, padx=5, pady=5)
+y_label = tk.Label(frame, text="y:")
+y_label.grid(row=1, column=2, padx=5, pady=5)
 
 y_input = tk.Entry(frame, width=10)
-y_input.grid(row=1, column=2, padx=5, pady=5)
+y_input.grid(row=1, column=3, padx=5, pady=5)
 
 check_point_button = tk.Button(frame, text="Sprawdź położenie punktu", width=20, height=2)
 check_point_button.grid(row=2, column=0, padx=5, pady=20, columnspan=4)
@@ -239,30 +299,33 @@ number_label.grid(row=7, column=0, padx=5, pady=5, columnspan=4)
 
 def redraw():
     ax.clear()
+    global max_point
+    global min_point
     if polygon:
-        ax.plot([x[0] for x in polygon], [x[1] for x in polygon], color=current_color, linewidth=current_line_width, linestyle=current_line_style)
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
+        ax.plot([x[1] for x in polygon], [x[0] for x in polygon], color=current_color, linewidth=current_line_width, linestyle=current_line_style)
+        ax.set_xlabel('y')
+        ax.set_ylabel('x')
+        ax.set_aspect('equal')
     if points:
         for point in points_inside_loaded:
             if check_point_location(point[0], point[1]):
-                ax.plot(point[0], point[1], color=current_point_inside, marker='o', markersize=current_point_size)
-                ax.set_xlabel('x')
-                ax.set_ylabel('y')
+                ax.plot(point[1], point[0], color=current_point_inside, marker='o', markersize=current_point_size)
+                ax.set_xlabel('y')
+                ax.set_ylabel('x')
             else:
-                ax.plot(point[0], point[1], color=current_point_outside, marker='o', markersize=current_point_size)
-                ax.set_xlabel('x')
-                ax.set_ylabel('y')
+                ax.plot(point[1], point[0], color=current_point_outside, marker='o', markersize=current_point_size)
+                ax.set_xlabel('y')
+                ax.set_ylabel('x')
     if points_added_manually:
         for point in points_added_manually:
             if point[2] == 1:
-                ax.plot(point[0], point[1], color=current_point_inside, marker='o', markersize=current_point_size)
-                ax.set_xlabel('x')
-                ax.set_ylabel('y')
+                ax.plot(point[1], point[0], color=current_point_inside, marker='o', markersize=current_point_size)
+                ax.set_xlabel('y')
+                ax.set_ylabel('x')
             else:
-                ax.plot(point[0], point[1], color=current_point_outside, marker='o', markersize=current_point_size)
-                ax.set_xlabel('x')
-                ax.set_ylabel('y')
+                ax.plot(point[1], point[0], color=current_point_outside, marker='o', markersize=current_point_size)
+                ax.set_xlabel('y')
+                ax.set_ylabel('x')
     canvas.draw()
 
 # zmiana koloru linii
@@ -336,7 +399,6 @@ point_inside_button.configure(command=change_point_inside)
 point_outside_button = tk.Button(frame3, text="Zmień kolor punktów \n na zewnątrz wielokąta", width=20, height=2)
 point_outside_button.grid(row=0, column=3, padx=20, pady=5)
 point_outside_button.configure(command=change_point_outside)
-
 point_size = ttk.Combobox(frame3, width=20, values=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 point_size.grid(row=0, column=6, padx=5, pady=5)
 point_size.current(0)
