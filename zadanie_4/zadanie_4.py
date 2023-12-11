@@ -47,6 +47,40 @@ def draw_bbox():
         bbox = [min(x), min(y), max(x), max(y)]
         plt.plot([bbox[0], bbox[0], bbox[2], bbox[2], bbox[0]], [bbox[1], bbox[3], bbox[3], bbox[1], bbox[1]], color=current_bbox_color, linestyle=current_bbox_style, linewidth=current_bbox_thickness)
 
+def calculate_hull():
+    return
+
+
+def draw_hull():
+    calculate_hull()
+    if len(hull) > 0 and current_hull_visibility:
+        x = [point[0] for point in hull]
+        y = [point[1] for point in hull]
+        plt.plot(x, y, color=current_hull_color, linestyle=current_hull_style, linewidth=current_hull_thickness)
+
+def save_hull():
+    try:
+        file = filedialog.asksaveasfile(mode='w', filetypes=[('Pliki tekstowe', '*.txt')], title="Zapisz otoczkę do pliku")
+        for point in hull:
+            file.write(f"{point[0]} {point[1]}\n")
+        file.close()
+        command_line.insert(tk.END, "\nZapisano otoczkę do pliku.")
+    except TypeError:
+        pass
+    except AttributeError:
+        pass
+
+def redraw():
+    plt.cla()
+    plt.grid(False)
+    plt.xticks([])
+    plt.yticks([])
+    for spine in plt.gca().spines.values():
+        spine.set_visible(False)
+    draw_points()
+    draw_bbox()
+    draw_hull()
+    canvas.draw()
 
 def add_point():
     try:
@@ -56,82 +90,113 @@ def add_point():
         messagebox.showerror("Błąd", "Wpisz poprawne współrzędne.")
     
     points.append([x, y])
-    command_line.insert(tk.END, f" \nDodano punkt nr {len(points)}: {x, y}")
+    redraw()
+    command_line.insert(tk.END, "\nWczytano punkty z pliku.")
 
 def on_checkbox_point_change():
+    global current_point_visibility
     if points_check_var.get():
         current_point_visibility = True
+        redraw()
         command_line.insert(tk.END, "\nPokazano punkty")
     else:
         current_point_visibility = False
+        redraw()
         command_line.insert(tk.END, "\nUkryto punkty")
 
 def on_spinbox_point_change():
+    global current_point_size
     current_point_size = points_size_var.get()
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono rozmiar punktów na {points_size_var.get()}")
 
 def on_combobox_point_change():
+    global current_point_style
     current_point_style = points_style_var.get()
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono styl punktów na {points_style_var.get()}")
 
 def on_color_point_change():
+    global current_point_color
     color = askcolor()
     current_point_color = color[1]
     points_color_button.configure(bg=color[1])
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono kolor punktów na {color[1]}")
 
 def on_checkbox_hull_change():
+    global current_hull_visibility
     if hull_check_var.get():
         current_hull_visibility = True
+        redraw()
         command_line.insert(tk.END, "\nPokazano otoczkę wypukłą")
     else:
         current_hull_visibility = False
+        redraw()
         command_line.insert(tk.END, "\nUkryto otoczkę wypukłą")
 
 
 def on_checkbox_number_visibility_change():
+    global current_number_visibility
     if points_number_visibility_var.get():
         current_number_visibility = True
+        redraw()
         command_line.insert(tk.END, "\nPokazano numery punktów")
     else:
         current_number_visibility = False
+        redraw()
         command_line.insert(tk.END, "\nUkryto numery punktów")
 
 def on_color_hull_change():
+    global current_hull_color
     color = askcolor()
     current_hull_color = color[1]
     hull_color_button.configure(bg=color[1])
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono kolor otoczki na {color[1]}")
 
 
 def on_spinbox_hull_change():
+    global current_hull_thickness
     current_hull_thickness = hull_size_var.get()
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono grubość otoczki na {hull_size_var.get()}")
 
 def on_combobox_hull_change():
+    global current_hull_style
     current_hull_style = hull_style_var.get()
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono styl otoczki na {hull_style_var.get()}")
 
 def on_checkbox_bbox_change():
+    global current_bbox_visibility
     if bbox_check_var.get():
         current_bbox_visibility = True
+        redraw()
         command_line.insert(tk.END, "\nPokazano bbox")
     else:
         current_bbox_visibility = False
+        redraw()
         command_line.insert(tk.END, "\nUkryto bbox")
 
 def on_color_bbox_change():
+    global current_bbox_color
     color = askcolor()
     current_bbox_color = color[1]
     bbox_color_button.configure(bg=color[1])
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono kolor bbox na {color[1]}")
 
 def on_spinbox_bbox_change():
+    global current_bbox_thickness
     current_bbox_thickness = bbox_thickness_var.get()
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono grubość bbox na {bbox_thickness_var.get()}")
 
 def on_combobox_bbox_change():
+    global current_bbox_style
     current_bbox_style = bbox_style_var.get()
+    redraw()
     command_line.insert(tk.END, f"\nZmieniono styl bbox na {bbox_style_var.get()}")
 
 # punkty
@@ -209,11 +274,13 @@ add_button.configure(command=add_point)
 convex_hull_frame = tk.LabelFrame(root, text="Budowanie otoczki wypukłej")
 convex_hull_frame.pack(side=tk.TOP, padx=10, pady=10, anchor=tk.NW)
 
-build_button = tk.Button(convex_hull_frame, text="Zbuduj otoczkę", width=19)
+build_button = tk.Button(convex_hull_frame, text="Narysuj otoczkę", width=19)
 build_button.pack(side=tk.LEFT, padx=10, pady=10)
+build_button.configure(command=draw_hull)
 
 save_button = tk.Button(convex_hull_frame, text="Zapisz otoczkę", width=19)
 save_button.pack(side=tk.LEFT, padx=10, pady=10)
+save_button.configure(command=save_hull)
 
 drawing_parameters = tk.LabelFrame(root, text="Prezentacja")
 drawing_parameters.pack(side=tk.TOP, padx=10, pady=10, anchor=tk.NW)
@@ -228,11 +295,13 @@ checkbox_frame.pack(side=tk.TOP, padx=10)
 points_check_var = tk.BooleanVar()
 points_checkbutton = ttk.Checkbutton(checkbox_frame, text="Pokaż punkty", variable=points_check_var)
 points_checkbutton.pack(side=tk.LEFT, padx=10)
+points_checkbutton.invoke()
 points_check_var.trace_add("write", lambda *args: on_checkbox_point_change())
 
 points_number_visibility_var = tk.BooleanVar()
 points_number_visibility_checkbutton = ttk.Checkbutton(checkbox_frame, text="Pokaż numery", variable=points_number_visibility_var)
 points_number_visibility_checkbutton.pack(side=tk.RIGHT, padx=10)
+points_number_visibility_checkbutton.invoke()
 points_number_visibility_var.trace_add("write", lambda *args: on_checkbox_number_visibility_change())
 
 points_color_button = tk.Button(points_frame, text="Kolor", width=10)
@@ -256,6 +325,7 @@ hull_frame.pack(side=tk.TOP, padx=10, pady=10, anchor=tk.NW)
 hull_check_var = tk.BooleanVar()
 hull_checkbutton = ttk.Checkbutton(hull_frame, text="Pokaż otoczkę", variable=hull_check_var)
 hull_checkbutton.pack(side=tk.TOP, padx=10)
+hull_checkbutton.invoke()
 hull_check_var.trace_add("write", lambda *args: on_checkbox_hull_change())
 
 hull_color_button = tk.Button(hull_frame, text="Kolor", width=10)
@@ -280,6 +350,7 @@ bbox_frame.pack(side=tk.LEFT, padx=10, pady=10, anchor=tk.NW)
 bbox_check_var = tk.BooleanVar()
 bbox_checkbutton = ttk.Checkbutton(bbox_frame, text="Pokaż bbox", variable=bbox_check_var)
 bbox_checkbutton.pack(side=tk.TOP, padx=10)
+bbox_checkbutton.invoke()
 bbox_check_var.trace_add("write", lambda *args: on_checkbox_bbox_change())
 
 bbox_color_button = tk.Button(bbox_frame, text="Kolor", width=10)
@@ -296,7 +367,5 @@ bbox_style_var = tk.StringVar()
 bbox_style_combobox = ttk.Combobox(bbox_frame, width=10, textvariable=bbox_style_var, values=bbox_style_options, state="readonly")
 bbox_style_combobox.pack(side=tk.LEFT, padx=10, pady=10)
 bbox_style_combobox.bind("<<ComboboxSelected>>", lambda *args: on_combobox_bbox_change())
-
-
 
 root.mainloop()
