@@ -1,6 +1,4 @@
-# geometria_obliczeniowa
-
-to repozytorium zawiera zadania z <i><b>geometrii obliczeniowej</b></i>
+# geometria obliczeniowa
 
 * zadanie 1: po której stronie prostej leży punkt?
 * zadanie 2: czy proste się przecinają?
