@@ -14,6 +14,7 @@ hull = []
 def clear():
     global points
     global hull
+    global bbox
     points = []
     hull = []
     plt.cla()
@@ -41,8 +42,9 @@ def load_points():
         file.close()
     except ValueError:
         messagebox.showerror("Błąd", "Niepoprawny plik.")
+        return
     except TypeError:
-        pass
+        return
     command_line.insert(tk.END, "\nWczytano punkty z pliku.")
     command_line.see(tk.END)
     draw_bbox()
@@ -74,7 +76,7 @@ def draw_points():
                 plt.plot(point[0], point[1], "x", color=current_point_color, markersize=current_point_size) 
     
 def draw_bbox():
-    if current_bbox_visibility:
+    if current_bbox_visibility and len(points) > 2:
         x = [point[0] for point in points]
         y = [point[1] for point in points]
         bbox = [min(x), min(y), max(x), max(y)]
@@ -98,6 +100,9 @@ def draw_hull():
     return
 
 def save_hull():
+    if hull == []:
+        messagebox.showerror("Błąd", "Najpierw wyznacz otoczkę.")
+        return
     try:
         file = filedialog.asksaveasfile(mode='w', filetypes=[('Pliki tekstowe', '*.txt')], title="Zapisz otoczkę do pliku")
         for point in hull:
@@ -122,26 +127,62 @@ def redraw():
     draw_hull()
     canvas.draw()
 
+def redraw_without_hull():
+    plt.cla()
+    plt.grid(False)
+    plt.xticks([])
+    plt.yticks([])
+    for spine in plt.gca().spines.values():
+        spine.set_visible(False)
+    draw_bbox()
+    draw_points()
+    canvas.draw()
+
 def add_point():
     try:
         x = float(x_entry.get())
         y = float(y_entry.get())
     except ValueError:
         messagebox.showerror("Błąd", "Wpisz poprawne współrzędne.")
+        return
+    except UnboundLocalError:
+        messagebox.showerror("Błąd", "Wpisz współrzędne.")
+        return
     
     points.append([y, x])
-    redraw()
+    if len(points) < 3:
+        draw_points()
+        draw_bbox()
+        canvas.draw()
+    else:
+        redraw()
     command_line.insert(tk.END, f"\nDodano punkt ({x}, {y})")
     command_line.see(tk.END)
 
 def on_checkbox_point_change():
     global current_point_visibility
-    if points_check_var.get():
+    if points == []:
+        messagebox.showerror("Błąd", "Najpierw wczytaj punkty.")
+        points_check_var.set(True)
+        return
+    elif points_check_var.get():
+        if len(points) < 3:
+            current_point_visibility = True
+            redraw_without_hull()
+            command_line.insert(tk.END, "\nPokazano punkty")
+            command_line.see(tk.END)
+            return
         current_point_visibility = True
         redraw()
         command_line.insert(tk.END, "\nPokazano punkty")
         command_line.see(tk.END)
     else:
+        if len(points) < 3:
+            current_point_visibility = False
+            redraw_without_hull()
+            command_line.insert(tk.END, "\nUkryto punkty")
+            command_line.see(tk.END)
+            return
         current_point_visibility = False
         redraw()
         command_line.insert(tk.END, "\nUkryto punkty")
@@ -150,6 +191,13 @@ def on_checkbox_point_change():
 def on_spinbox_point_change():
     global current_point_size
     current_point_size = points_size_var.get()
+    if len(points) == 0:
+        return
+    elif len(points) < 3:
+        redraw_without_hull()
+        command_line.insert(tk.END, f"\nZmieniono rozmiar punktów na {points_size_var.get()}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono rozmiar punktów na {points_size_var.get()}")
     command_line.see(tk.END)
@@ -157,6 +205,13 @@ def on_spinbox_point_change():
 def on_combobox_point_change():
     global current_point_style
     current_point_style = points_style_var.get()
+    if len(points) == 0:
+        return
+    elif len(points) < 3:
+        redraw_without_hull()
+        command_line.insert(tk.END, f"\nZmieniono styl punktów na {points_style_var.get()}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono styl punktów na {points_style_var.get()}")
     command_line.see(tk.END)
@@ -166,6 +221,13 @@ def on_color_point_change():
     color = askcolor()
     current_point_color = color[1]
     points_color_button.configure(bg=color[1])
+    if len(points) == 0:
+        return
+    elif len(points) < 3:
+        redraw_without_hull()
+        command_line.insert(tk.END, f"\nZmieniono kolor punktów na {color[1]}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono kolor punktów na {color[1]}")
     command_line.see(tk.END)
@@ -189,13 +251,27 @@ def on_checkbox_hull_change():
 
 def on_checkbox_number_visibility_change():
     global current_number_visibility
-    if points_number_visibility_var.get():
+    if points == []:
+        messagebox.showerror("Błąd", "Najpierw wczytaj punkty.")
+        points_number_visibility_var.set(True)
+        return
+    elif points_number_visibility_var.get():
         current_number_visibility = True
+        if len(points) < 3:
+            redraw_without_hull()
+            command_line.insert(tk.END, "\nPokazano numery punktów")
+            command_line.see(tk.END)
+            return
         redraw()
         command_line.insert(tk.END, "\nPokazano numery punktów")
         command_line.see(tk.END)
     else:
         current_number_visibility = False
+        if len(points) < 3:
+            redraw_without_hull()
+            command_line.insert(tk.END, "\nUkryto numery punktów")
+            command_line.see(tk.END)
+            return
         redraw()
         command_line.insert(tk.END, "\nUkryto numery punktów")
         command_line.see(tk.END)
@@ -205,6 +281,10 @@ def on_color_hull_change():
     color = askcolor()
     current_hull_color = color[1]
     hull_color_button.configure(bg=color[1])
+    if hull == []:
+        command_line.insert(tk.END, f"\nZmieniono kolor otoczki na {color[1]}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono kolor otoczki na {color[1]}")
     command_line.see(tk.END)
@@ -213,6 +293,10 @@ def on_color_hull_change():
 def on_spinbox_hull_change():
     global current_hull_thickness
     current_hull_thickness = hull_size_var.get()
+    if hull == []:
+        command_line.insert(tk.END, f"\nZmieniono grubość otoczki na {hull_size_var.get()}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono grubość otoczki na {hull_size_var.get()}")
     command_line.see(tk.END)
@@ -220,6 +304,10 @@ def on_spinbox_hull_change():
 def on_combobox_hull_change():
     global current_hull_style
     current_hull_style = hull_style_var.get()
+    if hull == []:
+        command_line.insert(tk.END, f"\nZmieniono styl otoczki na {hull_style_var.get()}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono styl otoczki na {hull_style_var.get()}")
     command_line.see(tk.END)
@@ -228,11 +316,21 @@ def on_checkbox_bbox_change():
     global current_bbox_visibility
     if bbox_check_var.get():
         current_bbox_visibility = True
+        if len(points) < 3:
+            redraw_without_hull()
+            command_line.insert(tk.END, "\nPokazano bbox")
+            command_line.see(tk.END)
+            return
         redraw()
         command_line.insert(tk.END, "\nPokazano bbox")
         command_line.see(tk.END)
     else:
         current_bbox_visibility = False
+        if len(points) < 3:
+            redraw_without_hull()
+            command_line.insert(tk.END, "\nUkryto bbox")
+            command_line.see(tk.END)
+            return
         redraw()
         command_line.insert(tk.END, "\nUkryto bbox")
         command_line.see(tk.END)
@@ -242,6 +340,10 @@ def on_color_bbox_change():
     color = askcolor()
     current_bbox_color = color[1]
     bbox_color_button.configure(bg=color[1])
+    if len(points) < 3:
+        command_line.insert(tk.END, f"\nZmieniono kolor bbox na {color[1]}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono kolor bbox na {color[1]}")
     command_line.see(tk.END)
@@ -249,6 +351,10 @@ def on_color_bbox_change():
 def on_spinbox_bbox_change():
     global current_bbox_thickness
     current_bbox_thickness = bbox_thickness_var.get()
+    if len(points) < 3:
+        command_line.insert(tk.END, f"\nZmieniono grubość bbox na {bbox_thickness_var.get()}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono grubość bbox na {bbox_thickness_var.get()}")
     command_line.see(tk.END)
@@ -256,6 +362,10 @@ def on_spinbox_bbox_change():
 def on_combobox_bbox_change():
     global current_bbox_style
     current_bbox_style = bbox_style_var.get()
+    if len(points) < 3:
+        command_line.insert(tk.END, f"\nZmieniono styl bbox na {bbox_style_var.get()}")
+        command_line.see(tk.END)
+        return
     redraw()
     command_line.insert(tk.END, f"\nZmieniono styl bbox na {bbox_style_var.get()}")
     command_line.see(tk.END)
@@ -374,17 +484,19 @@ points_number_visibility_checkbutton.pack(side=tk.RIGHT, padx=10)
 points_number_visibility_checkbutton.invoke()
 points_number_visibility_var.trace_add("write", lambda *args: on_checkbox_number_visibility_change())
 
-points_color_button = tk.Button(points_frame, text="Kolor", width=10)
+points_color_button = tk.Button(points_frame, text="Kolor", width=10, bg=default_point_color)
 points_color_button.pack(side=tk.LEFT, padx=10, pady=10)
 points_color_button.configure(command=on_color_point_change)
 
 points_size_var = tk.IntVar()
+points_size_var.set(default_point_size)
 points_size_spinbox = tk.Spinbox(points_frame, from_=1, to=10, width=10, textvariable=points_size_var)
 points_size_spinbox.pack(side=tk.LEFT, padx=10, pady=10)
 points_size_var.trace_add("write", lambda *args: on_spinbox_point_change())
 
 points_style_options = ["circle", "square", "triangle", "pentagon", "hexagon", "octagon", "star", "plus", "x"]
 points_style_var = tk.StringVar()
+points_style_var.set(default_point_style)
 points_style_combobox = ttk.Combobox(points_frame, width=10, textvariable=points_style_var, values=points_style_options, state="readonly")
 points_style_combobox.pack(side=tk.LEFT, padx=10, pady=10)
 points_style_combobox.bind("<<ComboboxSelected>>", lambda *args: on_combobox_point_change())
@@ -397,17 +509,19 @@ hull_checkbutton = ttk.Checkbutton(hull_frame, text="Pokaż otoczkę", variable=
 hull_checkbutton.pack(side=tk.TOP, padx=10)
 hull_check_var.trace_add("write", lambda *args: on_checkbox_hull_change())
 
-hull_color_button = tk.Button(hull_frame, text="Kolor", width=10)
+hull_color_button = tk.Button(hull_frame, text="Kolor", width=10, bg=default_hull_color)
 hull_color_button.pack(side=tk.LEFT, padx=10, pady=10)
 hull_color_button.configure(command=on_color_hull_change)
 
 hull_size_var = tk.IntVar()
+hull_size_var.set(default_hull_thickness)
 hull_size_spinbox = tk.Spinbox(hull_frame, from_=1, to=10, width=10, textvariable=hull_size_var)
 hull_size_spinbox.pack(side=tk.LEFT, padx=10, pady=10)
 hull_size_var.trace_add("write", lambda *args: on_spinbox_hull_change())
 
 hull_style_options = ["dashed", "dotted", "solid", "dashdot"]
 hull_style_var = tk.StringVar()
+hull_style_var.set(default_hull_style)
 hull_style_combobox = ttk.Combobox(hull_frame, width=10, textvariable=hull_style_var, values=hull_style_options, state="readonly")
 hull_style_combobox.pack(side=tk.LEFT, padx=10, pady=10)
 hull_style_combobox.bind("<<ComboboxSelected>>", lambda *args: on_combobox_hull_change())
@@ -422,17 +536,19 @@ bbox_checkbutton.pack(side=tk.TOP, padx=10)
 bbox_checkbutton.invoke()
 bbox_check_var.trace_add("write", lambda *args: on_checkbox_bbox_change())
 
-bbox_color_button = tk.Button(bbox_frame, text="Kolor", width=10)
+bbox_color_button = tk.Button(bbox_frame, text="Kolor", width=10, bg=default_bbox_color)
 bbox_color_button.pack(side=tk.LEFT, padx=10, pady=10)
 bbox_color_button.configure(command=on_color_bbox_change)
 
 bbox_thickness_var = tk.IntVar()
+bbox_thickness_var.set(default_bbox_thickness)
 bbox_thickness_spinbox = tk.Spinbox(bbox_frame, from_=1, to=10, width=10, textvariable=bbox_thickness_var)
 bbox_thickness_spinbox.pack(side=tk.LEFT, padx=10, pady=10)
 bbox_thickness_var.trace_add("write", lambda *args: on_spinbox_bbox_change())
 
 bbox_style_options = ["dashed", "dotted", "solid", "dashdot"]
 bbox_style_var = tk.StringVar()
+bbox_style_var.set(default_bbox_style)
 bbox_style_combobox = ttk.Combobox(bbox_frame, width=10, textvariable=bbox_style_var, values=bbox_style_options, state="readonly")
 bbox_style_combobox.pack(side=tk.LEFT, padx=10, pady=10)
 bbox_style_combobox.bind("<<ComboboxSelected>>", lambda *args: on_combobox_bbox_change())
