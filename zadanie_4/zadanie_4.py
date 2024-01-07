@@ -6,11 +6,13 @@ from tkinter.colorchooser import askcolor
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from scipy.spatial import ConvexHull
+import math
 
 points = []
 hull = []
 
-# clear everything before loading new points
+#popraw checkboxy i błąd z najpeirw wyznacz otoczke przy rysowaniu otoczki, moze tez komunikat jak sie pokazuje otoczka
+
 def clear():
     global points
     global hull
@@ -82,11 +84,6 @@ def draw_bbox():
         bbox = [min(x), min(y), max(x), max(y)]
         plt.plot([bbox[0], bbox[0], bbox[2], bbox[2], bbox[0]], [bbox[1], bbox[3], bbox[3], bbox[1], bbox[1]], color=current_bbox_color, linestyle=current_bbox_style, linewidth=current_bbox_thickness)
 
-def calculate_hull():
-    # print (points)
-    return
-
-
 def draw_hull():
     global hull
     if len(points) > 2:
@@ -98,6 +95,7 @@ def draw_hull():
     else:
         messagebox.showerror("Błąd", "Za mało punktów do wyznaczenia otoczki wypukłej.")
     return
+
 
 def save_hull():
     if hull == []:
