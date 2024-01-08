@@ -6,17 +6,13 @@ from tkinter.colorchooser import askcolor
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from scipy.spatial import ConvexHull
-import math
 
 points = []
 hull = []
 
-#popraw checkboxy i błąd z najpeirw wyznacz otoczke przy rysowaniu otoczki, moze tez komunikat jak sie pokazuje otoczka
-
 def clear():
     global points
     global hull
-    global bbox
     points = []
     hull = []
     plt.cla()
@@ -78,7 +74,7 @@ def draw_points():
                 plt.plot(point[0], point[1], "x", color=current_point_color, markersize=current_point_size) 
     
 def draw_bbox():
-    if current_bbox_visibility and len(points) > 2:
+    if current_bbox_visibility and len(points) > 0:
         x = [point[0] for point in points]
         y = [point[1] for point in points]
         bbox = [min(x), min(y), max(x), max(y)]
@@ -159,11 +155,7 @@ def add_point():
 
 def on_checkbox_point_change():
     global current_point_visibility
-    if points == []:
-        messagebox.showerror("Błąd", "Najpierw wczytaj punkty.")
-        points_check_var.set(True)
-        return
-    elif points_check_var.get():
+    if points_check_var.get():
         if len(points) < 3:
             current_point_visibility = True
             redraw_without_hull()
@@ -232,10 +224,11 @@ def on_color_point_change():
 
 def on_checkbox_hull_change():
     global current_hull_visibility
-    if hull == []:   
-        hull_check_var.set(False)
+    if hull == []:
         messagebox.showerror("Błąd", "Najpierw wyznacz otoczkę.")
-    elif hull_check_var.get():
+        hull_check_var.set(False)
+        return
+    if hull_check_var.get():
         current_hull_visibility = True
         redraw()
         command_line.insert(tk.END, "\nPokazano otoczkę wypukłą")
@@ -249,11 +242,7 @@ def on_checkbox_hull_change():
 
 def on_checkbox_number_visibility_change():
     global current_number_visibility
-    if points == []:
-        messagebox.showerror("Błąd", "Najpierw wczytaj punkty.")
-        points_number_visibility_var.set(True)
-        return
-    elif points_number_visibility_var.get():
+    if points_number_visibility_var.get():
         current_number_visibility = True
         if len(points) < 3:
             redraw_without_hull()
@@ -372,7 +361,8 @@ def draw_first_hull():
     global current_hull_visibility
     current_hull_visibility = True
     redraw()
-    hull_check_var.set(True)
+    if hull:
+        hull_check_var.set(True)
     command_line.see(tk.END)
 
 # punkty
