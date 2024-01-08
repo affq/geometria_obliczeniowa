@@ -5,7 +5,7 @@ from tkinter import filedialog
 from tkinter.colorchooser import askcolor
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from scipy.spatial import ConvexHull
+from convexhull import graham
 
 points = []
 hull = []
@@ -16,11 +16,7 @@ def clear():
     points = []
     hull = []
     plt.cla()
-    plt.grid(False)
-    plt.xticks([])
-    plt.yticks([])
-    for spine in plt.gca().spines.values():
-        spine.set_visible(False)
+    plt.grid(True)
 
 def load_points():
     clear()
@@ -84,9 +80,8 @@ def draw_hull():
     global hull
     if len(points) > 2:
         if current_hull_visibility:
-            hull = ConvexHull(points).vertices.tolist()
+            hull = graham(points)
             hull.append(hull[0])
-            hull = [points[i] for i in hull]
             plt.plot([point[0] for point in hull], [point[1] for point in hull], color=current_hull_color, linestyle=current_hull_style, linewidth=current_hull_thickness)
     else:
         messagebox.showerror("Błąd", "Za mało punktów do wyznaczenia otoczki wypukłej.")
@@ -105,17 +100,13 @@ def save_hull():
         command_line.insert(tk.END, "\nZapisano otoczkę do pliku.")
         command_line.see(tk.END)
     except TypeError:
-        pass
+        print ("Nie wybrano pliku.")
     except AttributeError:
-        pass
+        print ("Nie wybrano pliku.")
 
 def redraw():
     plt.cla()
-    plt.grid(False)
-    plt.xticks([])
-    plt.yticks([])
-    for spine in plt.gca().spines.values():
-        spine.set_visible(False)
+    plt.grid(True)
     draw_bbox()
     draw_points()
     draw_hull()
@@ -123,11 +114,7 @@ def redraw():
 
 def redraw_without_hull():
     plt.cla()
-    plt.grid(False)
-    plt.xticks([])
-    plt.yticks([])
-    for spine in plt.gca().spines.values():
-        spine.set_visible(False)
+    plt.grid(True)
     draw_bbox()
     draw_points()
     canvas.draw()
@@ -366,7 +353,7 @@ def draw_first_hull():
     command_line.see(tk.END)
 
 # punkty
-default_point_color = "black"
+default_point_color = "green"
 default_point_size = 2
 default_point_style = "circle"
 default_point_visibility = True
@@ -407,11 +394,7 @@ root.resizable(False, False)
 
 
 fig = plt.figure(figsize=(7,7))
-plt.grid(False)
-plt.xticks([])
-plt.yticks([])
-for spine in plt.gca().spines.values():
-    spine.set_visible(False)
+plt.grid(True)
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.get_tk_widget().pack(side=tk.RIGHT, padx=10, pady=10)
 
@@ -478,7 +461,7 @@ points_color_button.configure(command=on_color_point_change)
 
 points_size_var = tk.IntVar()
 points_size_var.set(default_point_size)
-points_size_spinbox = tk.Spinbox(points_frame, from_=1, to=10, width=10, textvariable=points_size_var)
+points_size_spinbox = tk.Spinbox(points_frame, from_=1, to=10, width=10, textvariable=points_size_var, state="readonly")
 points_size_spinbox.pack(side=tk.LEFT, padx=10, pady=10)
 points_size_var.trace_add("write", lambda *args: on_spinbox_point_change())
 
@@ -503,7 +486,7 @@ hull_color_button.configure(command=on_color_hull_change)
 
 hull_size_var = tk.IntVar()
 hull_size_var.set(default_hull_thickness)
-hull_size_spinbox = tk.Spinbox(hull_frame, from_=1, to=10, width=10, textvariable=hull_size_var)
+hull_size_spinbox = tk.Spinbox(hull_frame, from_=1, to=10, width=10, textvariable=hull_size_var, state="readonly")
 hull_size_spinbox.pack(side=tk.LEFT, padx=10, pady=10)
 hull_size_var.trace_add("write", lambda *args: on_spinbox_hull_change())
 
@@ -530,7 +513,7 @@ bbox_color_button.configure(command=on_color_bbox_change)
 
 bbox_thickness_var = tk.IntVar()
 bbox_thickness_var.set(default_bbox_thickness)
-bbox_thickness_spinbox = tk.Spinbox(bbox_frame, from_=1, to=10, width=10, textvariable=bbox_thickness_var)
+bbox_thickness_spinbox = tk.Spinbox(bbox_frame, from_=1, to=10, width=10, textvariable=bbox_thickness_var, state="readonly")
 bbox_thickness_spinbox.pack(side=tk.LEFT, padx=10, pady=10)
 bbox_thickness_var.trace_add("write", lambda *args: on_spinbox_bbox_change())
 
