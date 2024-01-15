@@ -95,7 +95,7 @@ def save_hull():
     try:
         file = filedialog.asksaveasfile(mode='w', filetypes=[('Pliki tekstowe', '*.txt')], title="Zapisz otoczkę do pliku")
         for point in hull:
-            file.write(f"{point[0]} {point[1]}\n")
+            file.write(f"{point[1]} {point[0]}\n")
         file.close()
         command_line.insert(tk.END, "\nZapisano otoczkę do pliku.")
         command_line.see(tk.END)
